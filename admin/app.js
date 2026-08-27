@@ -1,11 +1,9 @@
 const SUPABASE_URL = "https://bvlkkbjgwacfzllcgjyx.supabase.co";
 const SUPABASE_KEY = "sb_publishable_EW0C1nW88WbOHHkj8h2d8w_Nri8dcrK";
 const SESSION_KEY = "viatchau_admin_session";
-const REQUEST_KEY = "viatchau_admin_request";
 
 const state = {
   session: readJson(SESSION_KEY),
-  request: readJson(REQUEST_KEY),
   requests: [],
   accesses: [],
   events: [],
@@ -69,51 +67,20 @@ async function refreshSession() {
   saveJson(SESSION_KEY, next);
 }
 
-async function machineIdentity() {
-  let browserId = localStorage.getItem("viatchau_browser_id");
-  if (!browserId) {
-    browserId = crypto.randomUUID();
-    localStorage.setItem("viatchau_browser_id", browserId);
-  }
-  const raw = `${browserId}|${navigator.platform}|${navigator.language}`;
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function newSecret() {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
 async function requestAdminCode(email) {
-  const machineHash = await machineIdentity();
-  const secret = newSecret();
-  const rows = await rpc("viatchau_solicitar_acesso", {
-    p_email: email,
-    p_machine_hash: machineHash,
-    p_machine_name: `Painel web - ${navigator.platform || "navegador"}`,
-    p_app_version: "painel-2.1.0",
-    p_segredo: secret,
-  });
-  const request = Array.isArray(rows) ? rows[0] : rows;
-  if (!request?.solicitacao_id) throw new Error("O servidor nao criou a solicitacao.");
-  state.request = { id: request.solicitacao_id, secret, email, machineHash };
-  saveJson(REQUEST_KEY, state.request);
   await api("/functions/v1/viatchau-access", {
     method: "POST",
-    body: JSON.stringify({ action: "notify", request_id: request.solicitacao_id, request_secret: secret }),
+    body: JSON.stringify({ action: "admin-code", email }),
   });
 }
 
 async function verifyCode(email, code) {
   const session = await api("/auth/v1/verify", {
     method: "POST",
-    body: JSON.stringify({ email, token: code, type: "email" }),
+    body: JSON.stringify({ email, token: code, type: "magiclink" }),
   });
   state.session = session;
   saveJson(SESSION_KEY, session);
-  state.request = null;
-  saveJson(REQUEST_KEY, null);
   await rpc("viatchau_admin_listar_solicitacoes", { p_status: "PENDENTE" }, true);
 }
 
@@ -317,10 +284,3 @@ $("#confirm-dialog").addEventListener("close", () => {
 });
 
 if (state.session?.access_token) showAdmin();
-else if (state.request?.email) {
-  $("#email").value = state.request.email;
-  $("#code-group").classList.remove("hidden");
-  $("#code").required = true;
-  $("#login-button").textContent = "Entrar no painel";
-  setStatus("#login-status", "Digite o codigo enviado ao email administrativo.");
-}
