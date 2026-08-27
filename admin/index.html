@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Viatchau | Administracao</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div>
+        <strong>Viatchau</strong>
+        <span>Controle de acesso</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="session-email" class="session-email"></span>
+      <button id="refresh-button" class="button secondary hidden" type="button">Atualizar dados</button>
+      <button id="logout-button" class="button ghost hidden" type="button">Sair</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="login-view" class="login-layout">
+      <div class="login-copy">
+        <p class="eyebrow">Area restrita</p>
+        <h1>Administracao de acessos</h1>
+        <p>Aprove solicitacoes antes do envio do codigo e acompanhe os computadores autorizados.</p>
+      </div>
+      <form id="login-form" class="login-form">
+        <label for="email">Email do administrador</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+        <div id="code-group" class="hidden">
+          <label for="code">Codigo recebido por email</label>
+          <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}">
+        </div>
+        <button id="login-button" class="button primary wide" type="submit">Receber codigo</button>
+        <p id="login-status" class="status" role="status"></p>
+      </form>
+    </section>
+
+    <section id="admin-view" class="hidden">
+      <div class="summary-band">
+        <div>
+          <span>Solicitacoes pendentes</span>
+          <strong id="pending-count">0</strong>
+        </div>
+        <div>
+          <span>Usuarios cadastrados</span>
+          <strong id="user-count">0</strong>
+        </div>
+        <div>
+          <span>Computadores ativos</span>
+          <strong id="device-count">0</strong>
+        </div>
+      </div>
+
+      <nav class="tabs" aria-label="Secoes administrativas">
+        <button class="tab active" data-tab="requests" type="button">Solicitacoes <span id="pending-badge" class="badge">0</span></button>
+        <button class="tab" data-tab="access" type="button">Usuarios e computadores</button>
+        <button class="tab" data-tab="events" type="button">Historico</button>
+      </nav>
+
+      <section id="tab-requests" class="tab-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Solicitacoes de acesso</h2>
+            <p>O codigo e enviado somente depois da aprovacao.</p>
+          </div>
+          <select id="request-filter" aria-label="Filtrar solicitacoes">
+            <option value="PENDENTE">Pendentes</option>
+            <option value="">Todas</option>
+            <option value="APROVADO">Aprovadas</option>
+            <option value="CODIGO_ENVIADO">Codigo enviado</option>
+            <option value="RECUSADO">Recusadas</option>
+            <option value="CONCLUIDO">Concluidas</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Computador</th><th>Versao</th><th>Solicitado em</th><th>Status</th><th class="actions-column">Acao</th></tr></thead>
+            <tbody id="requests-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-access" class="tab-panel hidden">
+        <div class="section-heading">
+          <div>
+            <h2>Usuarios e computadores</h2>
+            <p>Bloqueie um usuario ou revogue apenas um computador.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Email</th><th>Usuario</th><th>Computador</th><th>Dispositivo</th><th>Ultimo acesso</th><th class="actions-column">Acao</th></tr></thead>
+            <tbody id="access-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="tab-events" class="tab-panel hidden">
+        <div class="section-heading">
+          <div>
+            <h2>Historico de utilizacao</h2>
+            <p>Ultimas verificacoes e migracoes registradas.</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Usuario</th><th>Computador</th><th>Evento</th><th>Destino</th><th>Resultado</th></tr></thead>
+            <tbody id="events-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <p id="admin-status" class="status admin-status" role="status"></p>
+    </section>
+  </main>
+
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <h3 id="confirm-title">Confirmar acao</h3>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="button ghost" value="cancel">Cancelar</button>
+        <button id="confirm-action" class="button danger" value="confirm">Confirmar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
